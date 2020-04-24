@@ -16,17 +16,15 @@
         './skia/',
         '.'
       ],
-      "libraries": [ "<(module_root_dir)/skia/out/release/libskia.a" ],
-      'cflags!': [ '-fno-exceptions' ],
-      'cflags_cc!': [ '-fno-exceptions' ],
-      'xcode_settings': {
-        'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
-        'CLANG_CXX_LIBRARY': 'libc++',
-        'MACOSX_DEPLOYMENT_TARGET': '10.7',
-      },
-      'msvs_settings': {
-        'VCCLCompilerTool': { 'ExceptionHandling': 1 },
-      }
+      'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
+      'conditions': [
+        ['OS=="mac"', {
+          "libraries": ["<(module_root_dir)/skia/out/release/libskia.a"]
+        }],
+        ['OS=="win"', {
+          "libraries": ["<(module_root_dir)/skia/out/release/skia.lib"]
+        }]
+      ]
     }
   ]
 }

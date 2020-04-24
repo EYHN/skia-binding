@@ -22,16 +22,6 @@ inline SkRect Napi_val_as_SkRect(Napi::Value val) {
   );
 }
 
-inline SkRect Napi_val_as_Sk(Napi::Value val) {
-  auto obj = val.As<Napi::Object>();
-  return SkRect::MakeLTRB(
-    Napi_val_as_SkScalar(obj.Get("left")),
-    Napi_val_as_SkScalar(obj.Get("top")),
-    Napi_val_as_SkScalar(obj.Get("right")),
-    Napi_val_as_SkScalar(obj.Get("bottom"))
-  );
-}
-
 template <typename T>
 inline T Napi_val_as_enum(Napi::Value val) {
   auto i = val.As<Napi::Number>().Int32Value();

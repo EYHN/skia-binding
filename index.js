@@ -18,11 +18,13 @@ const path = new SkPath();
 // }
 // path.close();
 
+
 path.addPoly([
   {x: 1, y:1},
   {x: 20, y:20},
   {x: 10, y:30},
-], 10);
+], 1);
+
 
 const paint = new SkPaint();
 paint.setAntiAlias(true);
