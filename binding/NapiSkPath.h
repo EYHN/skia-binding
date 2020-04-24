@@ -11,5 +11,5 @@ class NapiSkPath : public SkObjectWrap<NapiSkPath, SkPath> {
 
 inline SkPath Napi_val_as_SkPath(Napi::Value val) {
 	NapiSkPath* matrix = NapiSkPath::Unwrap(val.As<Napi::Object>());
-	return matrix->self;
+	return *(matrix->self.get());
 }

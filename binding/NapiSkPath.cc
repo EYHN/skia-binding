@@ -4,22 +4,22 @@
 Napi::Object NapiSkPath::makeConstructor(Napi::Env env) {
     // This method is used to hook the accessor and method callbacks
     Napi::Function func = DefineClass(env, "SkPath", {
-		SkObjectWrapInstanceMethod("isInterpolatable", [](SkPath& self, const Napi::CallbackInfo& info) -> Napi::Value {
-		  return bool_as_Napi_val(
-			  self.isInterpolatable(Napi_val_as_SkPath(info[0])),
-			  info.Env()
-		  );
-		}),
-		SkObjectWrapInstanceMethod("interpolate", [](SkPath& self, const Napi::CallbackInfo& info) -> Napi::Value {
-		NapiSkPath* newNapiSkPath = Unwrap(NapiSkPath::constructor.New({}));
-		newNapiSkPath->self = SkPath(self);
+      SkObjectWrapInstanceMethod("isInterpolatable", [](SkPath& self, const Napi::CallbackInfo& info) -> Napi::Value {
+        return bool_as_Napi_val(
+          self.isInterpolatable(Napi_val_as_SkPath(info[0])),
+          info.Env()
+        );
+      }),
+		// SkObjectWrapInstanceMethod("interpolate", [](SkPath& self, const Napi::CallbackInfo& info) -> Napi::Value {
+		// NapiSkPath* newNapiSkPath = Unwrap(NapiSkPath::constructor.New({}));
+		// newNapiSkPath->self = SkPath(self);
 
-		return bool_as_Napi_val(
-			  Napi_val_as_SkPath(info[0]),
-			  Napi_val_as_SkScalar(info[1]),
+		// return bool_as_Napi_val(
+		// 	  Napi_val_as_SkPath(info[0]),
+		// 	  Napi_val_as_SkScalar(info[1]),
 
-		  );
-		}),
+		//   );
+		// }),
         SkObjectWrapInstanceMethod("moveTo", [](SkPath &self, const Napi::CallbackInfo &info) -> Napi::Value {
           self.moveTo(Napi_val_as_SkScalar(info[0]),
             Napi_val_as_SkScalar(info[1]));
@@ -87,7 +87,7 @@ Napi::Object NapiSkPath::makeConstructor(Napi::Env env) {
         SkObjectWrapInstanceMethod("addPath", [](SkPath &self, const Napi::CallbackInfo &info) -> Napi::Value {
           auto source = Unwrap(info[0].As<Napi::Object>());
           self.addPath(
-            source->self,
+            *(source->self.get()),
             Napi_val_as_enum<SkPath::AddPathMode>(info[1], SkPath::kAppend_AddPathMode)
           );
           return info.This();
@@ -267,7 +267,7 @@ Napi::Object NapiSkPath::makeConstructor(Napi::Env env) {
         }),
         SkObjectWrapInstanceMethod("copy", [](SkPath &self, const Napi::CallbackInfo &info) -> Napi::Value {
           NapiSkPath* newNapiSkPath = Unwrap(NapiSkPath::constructor.New({}));
-          newNapiSkPath->self = SkPath(self);
+          newNapiSkPath->self = std::make_shared<SkPath>(SkPath(self));
           return newNapiSkPath->Value();
         })
     });
@@ -279,9 +279,7 @@ Napi::Object NapiSkPath::makeConstructor(Napi::Env env) {
 }
 
 NapiSkPath::NapiSkPath(const Napi::CallbackInfo &info) : SkObjectWrap<NapiSkPath, SkPath>(info) {
-	if (info[0].IsExternal()) {
-		self = *(info[0].As<Napi::External<SkPath>>().Data());
-	}
+	self = std::make_shared<SkPath>(SkPath());
 }
 
 Napi::FunctionReference NapiSkPath::constructor;

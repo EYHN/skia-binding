@@ -104,7 +104,7 @@ class SkObjectWrap : public Napi::ObjectWrap<T> {
     SkObjectWrap(const Napi::CallbackInfo &info);
     virtual ~SkObjectWrap();
 
-    SkObjectType self;
+    std::shared_ptr<SkObjectType> self;
 
   protected:
     typedef std::function<Napi::Value(SkObjectType &self, const Napi::CallbackInfo &info)> _function_type;
@@ -118,7 +118,7 @@ inline SkObjectWrap<T, SkObjectType>::~SkObjectWrap() {}
 template <typename T, typename SkObjectType>
 Napi::Value SkObjectWrap<T, SkObjectType>::_useCallback(const Napi::CallbackInfo &info) {
   _function_type cb = *((_function_type*)info.Data()); 
-  return cb(self, info);
+  return cb(*(self.get()), info);
 }
 
 template <typename T, typename SkObjectType>
@@ -131,9 +131,9 @@ inline Napi::ClassPropertyDescriptor<T> SkObjectWrap<T, SkObjectType>::SkObjectW
 
 template <typename T, typename SkObjectType>
 inline Napi::ClassPropertyDescriptor<T> SkObjectWrap<T, SkObjectType>::SkObjectWrapInstanceMethod(const char *utf8name, VoidSkObjectWrapMethodCallback callback) {
-  std::shared_ptr<_function_type> ptr = std::make_shared<_function_type>([callback](SkObjectType &self, const Napi::Env &env) {
-    callback();
-    return env.Undefined();
+  std::shared_ptr<_function_type> ptr = std::make_shared<_function_type>([callback](SkObjectType &self, const Napi::CallbackInfo &info) {
+    callback(self, info);
+    return info.Env().Undefined();
   });
   T::_functions.push_back(ptr);
 
@@ -142,7 +142,9 @@ inline Napi::ClassPropertyDescriptor<T> SkObjectWrap<T, SkObjectType>::SkObjectW
 
 template <typename T, typename SkObjectType>
 SkObjectWrap<T, SkObjectType>::SkObjectWrap(const Napi::CallbackInfo &info) : Napi::ObjectWrap<T>(info) {
-
+  if (info[0].IsExternal()) {
+    self = *(info[0].As<Napi::External<std::shared_ptr<SkObjectType>>>().Data());
+  }
 }
 
 template <typename T, typename SkObjectType>

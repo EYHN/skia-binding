@@ -11,5 +11,5 @@ class NapiSkMatrix : public SkObjectWrap<NapiSkMatrix, SkMatrix> {
 
 inline SkMatrix Napi_val_as_SkMatrix(Napi::Value val) {
   NapiSkMatrix* matrix = NapiSkMatrix::Unwrap(val.As<Napi::Object>());
-  return matrix->self;
+  return *(matrix->self.get());
 }
