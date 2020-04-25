@@ -31,4 +31,8 @@ NapiSkCanvas::NapiSkCanvas(const Napi::CallbackInfo &info) : SkObjectWrap<NapiSk
   info.This().As<Napi::Object>().Set("_surface", info[1]);
 }
 
+NapiSkCanvas::~NapiSkCanvas() {
+  printf("~NapiSkCanvas");
+}
+
 Napi::FunctionReference NapiSkCanvas::constructor;

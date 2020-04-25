@@ -50,7 +50,7 @@ Napi::Value NapiSkSurface::MakeRasterN32Premul(const Napi::CallbackInfo &info) {
     [self](Napi::Env env /*env*/, std::shared_ptr<sk_sp<SkSurface>>* data) {}
   )});
   
-  auto ptr = std::shared_ptr<SkCanvas>(rasterSurface->getCanvas());
+  auto ptr = std::shared_ptr<SkCanvas>(rasterSurface->getCanvas(), [](auto p) {/* don't delete canvas */});
 
   Napi::Object skcanvasjs = NapiSkCanvas::constructor.New({
     Napi::External<std::shared_ptr<SkCanvas>>::New(info.Env(), &ptr, [ptr](Napi::Env env /*env*/, std::shared_ptr<SkCanvas>* data) { }),

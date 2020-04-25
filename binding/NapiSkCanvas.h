@@ -7,4 +7,5 @@ class NapiSkCanvas : public SkObjectWrap<NapiSkCanvas, SkCanvas> {
     static Napi::Object makeConstructor(Napi::Env env);
     static Napi::FunctionReference constructor;
     NapiSkCanvas(const Napi::CallbackInfo &info);
+    ~NapiSkCanvas();
 };

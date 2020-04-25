@@ -93,11 +93,13 @@ Napi::Object NapiSkPath::makeConstructor(Napi::Env env) {
           return info.This();
         }),
         SkObjectWrapInstanceMethod("addPoly", [](SkPath &self, const Napi::CallbackInfo &info) -> Napi::Value {
+          SkPoint* points = Napi_val_as_array(info[0], &Napi_val_as_SkPoint);
           self.addPoly(
-            Napi_val_as_array(info[0], &Napi_val_as_SkPoint),
+            points,
             info[0].As<Napi::Array>().Length(),
             Napi_val_as_bool(info[1])
           );
+          delete points;
           return info.This();
         }),
         SkObjectWrapInstanceMethod("addRect", [](SkPath &self, const Napi::CallbackInfo &info) -> Napi::Value {
