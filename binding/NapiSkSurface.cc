@@ -39,34 +39,24 @@ Napi::Value NapiSkSurface::MakeRasterN32Premul(const Napi::CallbackInfo &info) {
 
   sk_sp<SkSurface> rasterSurface =
           SkSurface::MakeRasterN32Premul(width.Int32Value(), height.Int32Value());
-
   Napi::MemoryManagement::AdjustExternalMemory(info.Env(), rasterSurface->imageInfo().computeMinByteSize());
-
-  std::shared_ptr<sk_sp<SkSurface>> self = std::make_shared<sk_sp<SkSurface>>(rasterSurface);
-
-  Napi::Object sksurfacejs = constructor.New({Napi::External<std::shared_ptr<sk_sp<SkSurface>>>::New(
-    info.Env(), 
-    &self,
-    [self](Napi::Env env /*env*/, std::shared_ptr<sk_sp<SkSurface>>* data) {}
-  )});
+  NapiSkSurface& sksurfacejs = New(rasterSurface, info.Env());
   
   auto ptr = std::shared_ptr<SkCanvas>(rasterSurface->getCanvas(), [](auto p) {/* don't delete canvas */});
+  NapiSkCanvas& skcanvasjs =  NapiSkCanvas::New(ptr, info.Env());
 
-  Napi::Object skcanvasjs = NapiSkCanvas::constructor.New({
-    Napi::External<std::shared_ptr<SkCanvas>>::New(info.Env(), &ptr, [ptr](Napi::Env env /*env*/, std::shared_ptr<SkCanvas>* data) { }),
-    sksurfacejs
-  });
+  skcanvasjs.setSurfaceObject(sksurfacejs.Value());
+  sksurfacejs.setCanvasObject(skcanvasjs.Value());
 
-  sksurfacejs.Set("_canvas", skcanvasjs);
-
-  return sksurfacejs;
+  return sksurfacejs.Value();
 }
 
 NapiSkSurface::NapiSkSurface(const Napi::CallbackInfo &info) : SkObjectWrap<NapiSkSurface, sk_sp<SkSurface>>(info) {
 }
 
 NapiSkSurface::~NapiSkSurface() {
-  printf("~NapiSkSurface");
 }
 
-Napi::FunctionReference NapiSkSurface::constructor;
+void NapiSkSurface::setCanvasObject(const Napi::Object &surface) {
+  this->Value().Set("_canvas", surface);
+}

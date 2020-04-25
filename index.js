@@ -2,8 +2,7 @@ const { SkSurface, SkPath, SkPaint } = require('./build/Release/hello.node');
 
 setInterval(() => {
   console.time('total');
-  console.log("start -------");
-  const surface = SkSurface.MakeRasterN32Premul(2048,2048);
+  const surface = SkSurface.MakeRasterN32Premul(256,256);
   const canvas = surface.getCanvas();
   
   console.time('draw');

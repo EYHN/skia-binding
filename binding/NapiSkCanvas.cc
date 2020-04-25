@@ -28,11 +28,11 @@ Napi::Object NapiSkCanvas::makeConstructor(Napi::Env env) {
 }
 
 NapiSkCanvas::NapiSkCanvas(const Napi::CallbackInfo &info) : SkObjectWrap<NapiSkCanvas, SkCanvas>(info) {
-  info.This().As<Napi::Object>().Set("_surface", info[1]);
 }
 
 NapiSkCanvas::~NapiSkCanvas() {
-  printf("~NapiSkCanvas");
 }
 
-Napi::FunctionReference NapiSkCanvas::constructor;
+void NapiSkCanvas::setSurfaceObject(const Napi::Object &surface) {
+  this->Value().Set("_surface", surface);
+}

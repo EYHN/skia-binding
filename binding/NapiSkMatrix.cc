@@ -14,5 +14,3 @@ Napi::Object NapiSkMatrix::makeConstructor(Napi::Env env) {
 
 NapiSkMatrix::NapiSkMatrix(const Napi::CallbackInfo &info) : SkObjectWrap<NapiSkMatrix, SkMatrix>(info) {
 }
-
-Napi::FunctionReference NapiSkMatrix::constructor;

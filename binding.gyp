@@ -34,6 +34,9 @@
             'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES', # -fvisibility=hidden
           }
         }],
+        ['OS=="linux"', {
+          "libraries": ["<(module_root_dir)/skia/out/release/libskia.a"]
+        }],
         ['OS=="win"', {
           "libraries": ["<(module_root_dir)/skia/out/release/skia.lib"]
         }]

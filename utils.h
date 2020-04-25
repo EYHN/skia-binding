@@ -8,11 +8,11 @@
 #include <include/core/SkPathTypes.h>
 #include <include/core/SkPoint.h>
 
-inline SkScalar Napi_val_as_SkScalar(Napi::Value val) {
+inline SkScalar Napi_val_as_SkScalar(const Napi::Value& val) {
   return static_cast<SkScalar>((val).As<Napi::Number>().FloatValue());
 }
 
-inline SkRect Napi_val_as_SkRect(Napi::Value val) {
+inline SkRect Napi_val_as_SkRect(const Napi::Value& val) {
   auto obj = val.As<Napi::Object>();
   return SkRect::MakeLTRB(
     Napi_val_as_SkScalar(obj.Get("left")),
@@ -23,13 +23,13 @@ inline SkRect Napi_val_as_SkRect(Napi::Value val) {
 }
 
 template <typename T>
-inline T Napi_val_as_enum(Napi::Value val) {
+inline T Napi_val_as_enum(const Napi::Value& val) {
   auto i = val.As<Napi::Number>().Int32Value();
   return static_cast<T>(i);
 }
 
 template <typename T>
-inline T Napi_val_as_enum(Napi::Value val, T def) {
+inline T Napi_val_as_enum(const Napi::Value& val, T def) {
   if (val.IsUndefined()) {
     return def;
   }
@@ -38,7 +38,7 @@ inline T Napi_val_as_enum(Napi::Value val, T def) {
 }
 
 template <typename T>
-inline T* Napi_val_as_array(Napi::Value val, T (*converter)(Napi::Value val)) {
+inline T* Napi_val_as_array(const Napi::Value& val, T (*converter)(const Napi::Value& val)) {
   auto array = val.As<Napi::Array>();
   T *target = new T[array.Length()];
 
@@ -48,7 +48,7 @@ inline T* Napi_val_as_array(Napi::Value val, T (*converter)(Napi::Value val)) {
   return target;
 }
 
-inline SkPoint Napi_val_as_SkPoint(Napi::Value val) {
+inline SkPoint Napi_val_as_SkPoint(const Napi::Value& val) {
   auto obj = val.As<Napi::Object>();
   return SkPoint::Make(
     Napi_val_as_SkScalar(obj.Get("x")),
@@ -56,11 +56,11 @@ inline SkPoint Napi_val_as_SkPoint(Napi::Value val) {
   );
 }
 
-inline bool Napi_val_as_bool(Napi::Value val) {
+inline bool Napi_val_as_bool(const Napi::Value& val) {
   return val.As<Napi::Boolean>();
 }
 
-inline int Napi_val_as_int(Napi::Value val) {
+inline int Napi_val_as_int(const Napi::Value& val) {
   return val.As<Napi::Number>();
 }
 
@@ -104,7 +104,15 @@ class SkObjectWrap : public Napi::ObjectWrap<T> {
     SkObjectWrap(const Napi::CallbackInfo &info);
     virtual ~SkObjectWrap();
 
+    static T& New(SkObjectType& self, const Napi::Env &env);
+    static T& New(std::shared_ptr<SkObjectType>& shared, const Napi::Env &env);
+
+    SkObjectType& getSelf();
     std::shared_ptr<SkObjectType> self;
+
+    static T& from(const Napi::Value& val);
+
+    static Napi::FunctionReference constructor;
 
   protected:
     typedef std::function<Napi::Value(SkObjectType &self, const Napi::CallbackInfo &info)> _function_type;
@@ -118,7 +126,7 @@ inline SkObjectWrap<T, SkObjectType>::~SkObjectWrap() {}
 template <typename T, typename SkObjectType>
 Napi::Value SkObjectWrap<T, SkObjectType>::_useCallback(const Napi::CallbackInfo &info) {
   _function_type cb = *((_function_type*)info.Data()); 
-  return cb(*(self.get()), info);
+  return cb(getSelf(), info);
 }
 
 template <typename T, typename SkObjectType>
@@ -149,5 +157,42 @@ SkObjectWrap<T, SkObjectType>::SkObjectWrap(const Napi::CallbackInfo &info) : Na
 
 template <typename T, typename SkObjectType>
 std::vector<std::shared_ptr<std::function<Napi::Value(SkObjectType &self, const Napi::CallbackInfo &info)>>> SkObjectWrap<T, SkObjectType>::_functions;
+
+template <typename T, typename SkObjectType>
+SkObjectType& SkObjectWrap<T, SkObjectType>::getSelf() {
+  return *(self.get());
+}
+
+template <typename T, typename SkObjectType>
+T& SkObjectWrap<T, SkObjectType>::New(SkObjectType& self, const Napi::Env &env) {
+  std::shared_ptr<SkObjectType> shared = std::make_shared<SkObjectType>(self);
+
+  Napi::Object object = constructor.New({Napi::External<std::shared_ptr<SkObjectType>>::New(
+    env, 
+    &shared,
+    [shared](Napi::Env env /*env*/, std::shared_ptr<SkObjectType>* data) {}
+  )});
+
+  return *(SkObjectWrap<T, SkObjectType>::Unwrap(object));
+}
+
+template <typename T, typename SkObjectType>
+T& SkObjectWrap<T, SkObjectType>::New(std::shared_ptr<SkObjectType>& shared, const Napi::Env &env) {
+  Napi::Object object = constructor.New({Napi::External<std::shared_ptr<SkObjectType>>::New(
+    env, 
+    &shared,
+    [shared](Napi::Env env /*env*/, std::shared_ptr<SkObjectType>* data) {}
+  )});
+
+  return *(SkObjectWrap<T, SkObjectType>::Unwrap(object));
+}
+
+template <typename T, typename SkObjectType>
+Napi::FunctionReference SkObjectWrap<T, SkObjectType>::constructor;
+
+template <typename T, typename SkObjectType>
+T& SkObjectWrap<T, SkObjectType>::from(const Napi::Value& val) {
+  return SkObjectWrap<T, SkObjectType>::Unwrap(val.As<Napi::Object>());
+}
 
 #endif
